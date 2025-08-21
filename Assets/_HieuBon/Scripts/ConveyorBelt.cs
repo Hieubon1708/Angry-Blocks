@@ -5,93 +5,35 @@ public class ConveyorBelt : MonoBehaviour
 {
     public float speed;
 
-    public Transform[] points;
+    Transform[] points;
 
-    public GameObject preArrow;
+    List<Vector3> cachedPathPoints = new List<Vector3>();
 
-    public int amountArrow;
+    LineRenderer lineRenderer;
 
-    int segmentsPerCurve = 10;
-
-    [HideInInspector]
-    public List<Vector3> cachedPathPoints = new List<Vector3>();
-
-    ConveyorBeltArrow[] conveyorBeltArrows;
+    float startOffset;
 
     private void Awake()
     {
         GenerateSmoothPath();
 
-        conveyorBeltArrows = GetComponentsInChildren<ConveyorBeltArrow>();
+        lineRenderer = GetComponentInChildren<LineRenderer>();
 
-        float totalDistance = 0;
+        lineRenderer.positionCount = cachedPathPoints.Count;
 
-        for (int i = 0; i < cachedPathPoints.Count - 1; i++)
+        for (int i = 0; i < lineRenderer.positionCount; i++)
         {
-            totalDistance += Vector3.Distance(cachedPathPoints[i], cachedPathPoints[i + 1]);
+            Vector3 pos = cachedPathPoints[i];
+
+            pos.y += 0.01f;
+
+            lineRenderer.SetPosition(i, pos);
         }
+    }
 
-        float distance = totalDistance / (conveyorBeltArrows.Length - 1);
-
-        float tempTotalDistance = 0;
-        float tempPointDistance = 0;
-
-        Debug.Log("a = " + totalDistance);
-        Debug.Log("b = " + (conveyorBeltArrows.Length - 1));
-        Debug.Log("Distance = " + distance);
-
-        conveyorBeltArrows[0].transform.position = cachedPathPoints[0];
-
-        int pointIndex = 0;
-        int arrowIndex = 1;
-
-        while (arrowIndex < conveyorBeltArrows.Length)
-        {
-            Debug.Log("Arrow Index = " + arrowIndex);
-            if (arrowIndex == 2) break;
-            tempTotalDistance += distance;
-
-            while (true)
-            {
-                tempPointDistance += Vector3.Distance(cachedPathPoints[pointIndex], cachedPathPoints[pointIndex + 1]);
-
-                if (tempTotalDistance < tempPointDistance)
-                {
-                    Debug.LogError("Point Index = " + pointIndex);
-                    Debug.LogError("Distance Arrow = " + tempTotalDistance);
-                    Debug.LogError("Distance Point = " + tempPointDistance);
-                    break;
-                }
-                Debug.LogError("Point Index = " + pointIndex);
-                Debug.LogError("Distance Arrow = " + tempTotalDistance);
-                Debug.LogError("Distance Point = " + tempPointDistance);
-                // lớn hơn khoảng cách thì tăng point lên 1
-                pointIndex++;
-
-                if (pointIndex == cachedPathPoints.Count - 1) break;
-
-                // cộng khoảng cách các point đằng sau lại
-            }
-
-            Vector3 dir = Vector3.zero;
-
-            if (pointIndex == cachedPathPoints.Count - 1)
-            {
-                dir = (cachedPathPoints[0] - cachedPathPoints[pointIndex]).normalized;
-                conveyorBeltArrows[arrowIndex].transform.position = cachedPathPoints[pointIndex];
-            }
-            else
-            {
-                dir = (cachedPathPoints[pointIndex + 1] - cachedPathPoints[pointIndex]).normalized;
-                conveyorBeltArrows[arrowIndex].transform.position = cachedPathPoints[pointIndex] + dir * (tempTotalDistance - tempPointDistance);
-                Debug.Log(tempTotalDistance - tempPointDistance);
-                Debug.Log(Vector3.Distance(conveyorBeltArrows[arrowIndex].transform.position, conveyorBeltArrows[arrowIndex - 1].transform.position));
-            }
-
-            //conveyorBeltArrows[arrowIndex].LoadData(pointIndex);
-
-            arrowIndex++;
-        }
+    private void Update()
+    {
+        lineRenderer.material.SetTextureOffset("_MainTex", new Vector2(startOffset -= Time.deltaTime, 0));
     }
 
     void OnDrawGizmos()
@@ -116,6 +58,17 @@ public class ConveyorBelt : MonoBehaviour
 
     public void GenerateSmoothPath()
     {
+        int segmentsPerCurve = 100;
+
+        Transform pointParent = transform.Find("Points");
+
+        points = new Transform[pointParent.childCount];
+
+        for (int i = 0; i < points.Length; i++)
+        {
+            points[i] = pointParent.GetChild(i);
+        }
+
         List<Vector3> controlPoints = new List<Vector3>();
 
         foreach (Transform t in points)
@@ -141,8 +94,6 @@ public class ConveyorBelt : MonoBehaviour
                 float t = (float)j / segmentsPerCurve;
                 Vector3 point = GetCatmullRomPoint(p0, p1, p2, p3, t);
                 cachedPathPoints.Add(point);
-
-                Instantiate(preArrow, point, Quaternion.identity);
             }
         }
 

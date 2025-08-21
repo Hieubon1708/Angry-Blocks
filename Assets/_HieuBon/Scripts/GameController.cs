@@ -2,15 +2,43 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public static GameController instance;
+
+    public TraysPosition traysPosition;
+
+    public GameObject preConveyorBelt;
+
+    GameObject conveyorBeltContainer;
+
+    public int Level
     {
-        
+        get
+        {
+            return PlayerPrefs.GetInt("Level", 1);
+        }
+        set
+        {
+            PlayerPrefs.SetInt("Level", value);
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Awake()
     {
-        
+        instance = this;
+
+        //LoadLevel();
+    }
+
+    public enum FoodType
+    {
+        T1, T2, T3, T4, T5, None
+    }
+
+    public void LoadLevel()
+    {
+        if (conveyorBeltContainer != null) Destroy(conveyorBeltContainer);
+
+        conveyorBeltContainer = Instantiate(preConveyorBelt, transform);
     }
 }
+
