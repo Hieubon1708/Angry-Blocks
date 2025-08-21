@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class ConveyorBeltArrow : MonoBehaviour
 {
     ConveyorBelt conveyorBelt;
 
-    int currentSegmentIndex = 0;
+    int currentSegmentIndex = -1;
 
     private void Awake()
     {
@@ -19,20 +18,21 @@ public class ConveyorBeltArrow : MonoBehaviour
 
     private void Update()
     {
-        return;
+        if (currentSegmentIndex == -1) return;
+
         Vector3 targetPoint = conveyorBelt.cachedPathPoints[currentSegmentIndex];
-        Vector3 direction = targetPoint - transform.position;
 
-        float step = conveyorBelt.speed * Time.deltaTime;
+        targetPoint.y += 0.01f;
 
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        Vector3 dir = targetPoint - transform.position;
 
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10 * Time.deltaTime);
-        transform.position = Vector3.MoveTowards(transform.position, targetPoint, step);
+        transform.position = Vector3.MoveTowards(transform.position, targetPoint, Time.deltaTime * 1);
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir) * Quaternion.Euler(90, -90, 0), Time.deltaTime * 10);
 
         if (Vector3.Distance(transform.position, targetPoint) < 0.01f)
         {
             currentSegmentIndex++;
+
             if (currentSegmentIndex >= conveyorBelt.cachedPathPoints.Count)
             {
                 currentSegmentIndex = 0;
