@@ -2,40 +2,34 @@ using UnityEngine;
 
 public class ConveyorBeltArrow : MonoBehaviour
 {
-    ConveyorBelt conveyorBelt;
+    [HideInInspector]
+    public int currentSegmentIndex = -1;
 
-    int currentSegmentIndex = -1;
-
-    private void Awake()
-    {
-        conveyorBelt = GetComponentInParent<ConveyorBelt>();
-    }
-
-    public void LoadData(int currentSegmentIndex)
+    public void SetSegmentIndex(int currentSegmentIndex)
     {
         this.currentSegmentIndex = currentSegmentIndex;
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (currentSegmentIndex == -1) return;
 
-        Vector3 targetPoint = conveyorBelt.cachedPathPoints[currentSegmentIndex];
-
-        targetPoint.y += 0.01f;
-
+        Vector3 targetPoint = LevelController.instance.conveyorBelt.cachedPathPoints[currentSegmentIndex];
         Vector3 dir = targetPoint - transform.position;
 
-        transform.position = Vector3.MoveTowards(transform.position, targetPoint, Time.deltaTime * 1);
-        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir) * Quaternion.Euler(90, -90, 0), Time.deltaTime * 10);
+        transform.position = Vector3.MoveTowards(transform.position, targetPoint, LevelController.instance.conveyorBelt.speed);
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir) * Quaternion.Euler(-90, -90, 0), LevelController.instance.conveyorBelt.speed * 10);
 
         if (Vector3.Distance(transform.position, targetPoint) < 0.01f)
         {
             currentSegmentIndex++;
 
-            if (currentSegmentIndex >= conveyorBelt.cachedPathPoints.Count)
+            if (currentSegmentIndex >= LevelController.instance.conveyorBelt.cachedPathPoints.Count)
             {
-                currentSegmentIndex = 0;
+                transform.position = LevelController.instance.conveyorBelt.cachedPathPoints[0];
+                transform.rotation = Quaternion.LookRotation(LevelController.instance.conveyorBelt.cachedPathPoints[1] - transform.position) * Quaternion.Euler(-90, -90, 0);
+
+                currentSegmentIndex = 1;
             }
         }
     }

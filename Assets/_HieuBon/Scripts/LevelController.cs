@@ -1,20 +1,62 @@
 using UnityEngine;
+using DG.Tweening;
+using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
 
 public class LevelController : MonoBehaviour
 {
-    public int amount;
+    public static LevelController instance;
 
-    public GameObject preFoodTray;
+    [HideInInspector]
+    public ConveyorBelt conveyorBelt;
+    [HideInInspector]
+    public FoodTrays foodTrays;
+    [HideInInspector]
+    public DeliveryController deliveryController;
+    [HideInInspector]
+    public GameState gameState;
+    [HideInInspector]
+    public LevelData levelData;
+
+
+    public int moveCount;
+
+    public enum GameState
+    {
+        Playing, Win, Lose
+    }
 
     private void Awake()
     {
-        TrayPosition traysPosition = GameController.instance.traysPosition.trayAmount[amount - 1];
+        instance = this;
 
-        for (int i = 0; i < amount; i++)
+        TextAsset textAsset = Resources.Load<TextAsset>("1");
+
+        levelData = JsonConvert.DeserializeObject<LevelData>(textAsset.text);
+
+        conveyorBelt = GetComponentInChildren<ConveyorBelt>();
+        deliveryController = GetComponentInChildren<DeliveryController>();
+        foodTrays = GetComponentInChildren<FoodTrays>();
+
+        deliveryController.GenerateDeliveryLines(levelData.shipperDatas);
+        foodTrays.GenerateFoodTrays(levelData.trayDatas);
+        conveyorBelt.GenerateConveyorBelt(levelData.conveyorBeltDatas, levelData.barData);
+
+        moveCount = levelData.moveAmount;
+
+         UIController.instance.uIInGame.UpdateMove(moveCount);
+    }
+
+    public void SubtractMove()
+    {
+        moveCount--;
+
+        UIController.instance.uIInGame.UpdateMove(moveCount);
+
+        if (moveCount == 0)
         {
-            GameObject e = Instantiate(preFoodTray, transform);
-
-            e.transform.localPosition = traysPosition.pos[i];
+            UIController.instance.ShowPaneLose();
         }
     }
 }

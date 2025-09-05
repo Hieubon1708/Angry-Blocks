@@ -2,15 +2,41 @@ using UnityEngine;
 
 public class UIController : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public static UIController instance;
+
+    public GameObject panelWin;
+    public GameObject panelLose;
+
+    [HideInInspector]
+    public UIInGame uIInGame;
+
+    private void Awake()
     {
-        
+        instance = this;
+
+        uIInGame = GetComponent<UIInGame>();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void ShowPanelWin()
     {
-        
+        panelWin.SetActive(true);
+    }
+    
+    public void HidePanelWin()
+    {
+        panelWin.SetActive(false);
+
+        GameController.instance.LoadLevel();
+    }
+
+    public void ShowPaneLose()
+    {
+        panelLose.SetActive(true);
+    }
+
+    public void HidePaneLose()
+    {
+        panelLose.SetActive(false);
+        GameController.instance.LoadLevel();
     }
 }
