@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEditor;
 using UnityEngine;
 
@@ -23,8 +24,6 @@ public class FoodTrays : MonoBehaviour
             foodTrays[i] = e.GetComponent<FoodTray>();
             foodTrays[i].GenerateFood(trayDatas[i].foodType);
         }
-
-        CheckSphereCast();
     }
 
     public void CheckSphereCast()

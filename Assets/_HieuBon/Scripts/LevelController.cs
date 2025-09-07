@@ -19,7 +19,6 @@ public class LevelController : MonoBehaviour
     [HideInInspector]
     public LevelData levelData;
 
-
     public int moveCount;
 
     public enum GameState
@@ -44,15 +43,17 @@ public class LevelController : MonoBehaviour
         conveyorBelt.GenerateConveyorBelt(levelData.conveyorBeltDatas, levelData.barData);
 
         moveCount = levelData.moveAmount;
-
-         UIController.instance.uIInGame.UpdateMove(moveCount);
+        
+        UIController.instance.uIInGame.UpdateMove(moveCount > 0 ? moveCount.ToString() : "");
     }
 
-    public void SubtractMove()
+    public void MinusMove()
     {
         moveCount--;
 
-        UIController.instance.uIInGame.UpdateMove(moveCount);
+        if (moveCount < 0) return;
+
+        UIController.instance.uIInGame.UpdateMove(moveCount.ToString());
 
         if (moveCount == 0)
         {

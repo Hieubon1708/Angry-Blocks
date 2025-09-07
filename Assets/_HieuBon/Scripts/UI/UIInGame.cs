@@ -8,13 +8,8 @@ public class UIInGame : MonoBehaviour
     }
     public TextMeshProUGUI txtMoveCount;
 
-    public void UpdateMove(int count)
+    public void UpdateMove(string text)
     {
-        Debug.Log("aasdasd");
-        txtMoveCount.text = "AA";
-        txtMoveCount.text = "AA";
-        txtMoveCount.text = "AA";
-        txtMoveCount.text = "AA";
-        txtMoveCount.text = "AA";
+        txtMoveCount.text = text;
     }
 }

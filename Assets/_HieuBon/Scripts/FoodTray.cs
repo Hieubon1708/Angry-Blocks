@@ -29,6 +29,11 @@ public class FoodTray : MonoBehaviour
         meshRenderer = GetComponentInChildren<MeshRenderer>();
     }
 
+    private void Start()
+    {
+        CheckSphereCast();
+    }
+
     public void Blur()
     {
         meshRenderer.material.color = new Color(0.5f, 0.5f, 0.5f);
@@ -117,26 +122,40 @@ public class FoodTray : MonoBehaviour
 
     public void CheckSphereCast()
     {
-        int amount = Physics.OverlapSphereNonAlloc(transform.position + transform.up * 0.5f, 0.35f, result, foodTrayMask);
+        Vector3 actualBoxCenter = transform.position + transform.up * 3.5f;
 
-        if (amount == 1)
+        int numColliders = Physics.OverlapBoxNonAlloc(actualBoxCenter, boxHalfExtents, result, transform.rotation, foodTrayMask);
+
+        Debug.Log(numColliders);
+
+        Color targetColor = numColliders == 0 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+
+        if (numColliders == 0 && meshRenderer.material.color == targetColor) return;
+
+        meshRenderer.material.color = targetColor;
+        meshRenderer.material.SetColor("_EmissionColor", targetColor);
+
+        foreach (var e in foods)
         {
-            meshRenderer.material.color = Color.white;
-            meshRenderer.material.SetColor("_EmissionColor", Color.white);
-
-            foreach (var e in foods)
-            {
-                e.meshRenderer.material.color = Color.white;
-                e.meshRenderer.material.SetColor("_EmissionColor", Color.white);
-            }
+            e.meshRenderer.material.color = targetColor;
+            e.meshRenderer.material.SetColor("_EmissionColor", targetColor);
         }
     }
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.yellow;
+    Vector3 boxHalfExtents = new Vector3(7f, 1f, 2f);
 
-        Debug.DrawLine(transform.position, transform.position + transform.up * 0.5f, Color.yellow);
-        Gizmos.DrawWireSphere(transform.position + transform.up * 0.5f, 0.35f);
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+
+        Vector3 actualBoxCenter = transform.position + transform.up * 3.5f;
+
+        Matrix4x4 originalMatrix = Gizmos.matrix;
+
+        Gizmos.matrix = Matrix4x4.TRS(actualBoxCenter, transform.rotation, Vector3.one);
+
+        Gizmos.DrawWireCube(Vector3.zero, boxHalfExtents * 2);
+
+        Gizmos.matrix = originalMatrix;
     }
 }

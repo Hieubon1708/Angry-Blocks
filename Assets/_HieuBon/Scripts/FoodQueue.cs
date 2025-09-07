@@ -40,6 +40,7 @@ public class FoodQueue : MonoBehaviour
         food.transform.DOJump(points[slotIndex].position, 15, 1, 0.25f).OnComplete(delegate
         {
             slots[slotIndex].AddFood(food);
+            food.AniSale();
         });
     }
 
@@ -91,6 +92,7 @@ public class FoodQueue : MonoBehaviour
             slots[indexes[index]].food.transform.DOJump(pos, 15, 1, time).OnComplete(delegate
             {
                 FoodOnConveyorBelt.instance.AddFood(slots[indexes[index]].food);
+
             });
             slots[indexes[index]].RemoveFood();
         }

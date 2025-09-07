@@ -147,6 +147,7 @@ MonoBehaviour:
       position: {x: 0, y: 0, z: 0}
       direction: {x: 0, y: 0, z: 0, w: 0}
     moveAmount: 0
+  moveCount: 0
 --- !u!114 &1372457915332285194
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -477,7 +478,7 @@ MonoBehaviour:
     type: 3}
   preInOut: {fileID: 3585039569440091127, guid: 74212dec78316bb49bde6c59434be56b,
     type: 3}
-  speed: 0.1
+  speed: 0.078
   bar: {fileID: 5805154147989690322}
   cachedPathPoints: []
   arrows: []

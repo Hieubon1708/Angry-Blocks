@@ -32,6 +32,7 @@ public class PlayerController : MonoBehaviour
             {
                 if (foodTray.IsHighestLayer())
                 {
+                    LevelController.instance.MinusMove();
                     foodTray.Toss();
                 }
             }
@@ -44,6 +45,7 @@ public class PlayerController : MonoBehaviour
             {
                 if (hit.collider.gameObject.layer == LayerMask.NameToLayer("FoodQueue"))
                 {
+                    LevelController.instance.MinusMove();
                     FoodOnConveyorBelt.instance.foodQueue.OnConveyorBelt(hit.collider.gameObject);
                 }
             }

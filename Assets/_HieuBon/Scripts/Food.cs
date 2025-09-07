@@ -10,9 +10,18 @@ public class Food : MonoBehaviour
 
     public FoodPoint foodPoint;
 
+    Animation ani;
+
     private void Awake()
     {
         meshRenderer = GetComponentInChildren<MeshRenderer>();
+
+        ani = GetComponent<Animation>();
+    }
+
+    public void AniSale()
+    {
+        //ani.Play();
     }
 
     public void Blur()
