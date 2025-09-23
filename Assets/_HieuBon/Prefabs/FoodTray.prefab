@@ -305,7 +305,6 @@ Transform:
   - {fileID: 3969595721505267017}
   - {fileID: 5323346485909039516}
   - {fileID: 4335094671209066593}
-  - {fileID: 2786920023022544795}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6162628233614298391
@@ -715,7 +714,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 173c70508df31da46a002ba4e24cc9bf,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2786920023022544795}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 173c70508df31da46a002ba4e24cc9bf,
         type: 3}
@@ -777,7 +780,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 4220649225569661004}
+    m_TransformParent: {fileID: 2785911260000250763}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 2c4d5ae03c6062545a406a25623fdf58,
         type: 3}
@@ -802,7 +805,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 2c4d5ae03c6062545a406a25623fdf58,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2c4d5ae03c6062545a406a25623fdf58,
         type: 3}
@@ -876,6 +879,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   amount: 0
+  textAmount: {fileID: 0}
   rb: {fileID: 9018502444631320661}
   smoke: {fileID: 4335094671193889689}
 --- !u!54 &9018502444631320661

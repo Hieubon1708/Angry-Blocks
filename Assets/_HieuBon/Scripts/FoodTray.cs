@@ -101,6 +101,8 @@ public class FoodTray : MonoBehaviour
     {
         if (LevelController.instance.foodTrays.IsOutOfTray()) AudioController.instance.StopOnFire();
 
+        LevelController.instance.foodTrays.MinusFreeze();
+
         if (deliveryMan != null)
         {
             if (meshRenderer.material.color != Color.white)
@@ -217,7 +219,7 @@ public class FoodTray : MonoBehaviour
 
     public void CheckSphereCast()
     {
-        if (!boxCollider.enabled || IsFreeze()) return;
+        if (!boxCollider.enabled) return;
 
         Vector3 actualBoxCenter = transform.position + transform.up * 12.15f;
 

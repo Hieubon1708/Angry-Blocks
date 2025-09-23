@@ -139,12 +139,12 @@ public class FoodTrays : MonoBehaviour
 
         foreach (var e in iceTrays)
         {
-            if (e.transform.position.y > yHighest && e.gameObject.activeSelf) yHighest = e.transform.position.y;
+            if (e.transform.position.y > yHighest && e.amount > 0) yHighest = e.transform.position.y;
         }
         
         foreach (var e in iceTrays)
         {
-            if (e.transform.position.y == yHighest) e.Break();
+            if (e.transform.position.y == yHighest && e.amount > 0) e.Break();
         }
     }
 

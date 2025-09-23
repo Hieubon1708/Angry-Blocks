@@ -67,8 +67,6 @@ public class LevelController : MonoBehaviour
     {
         moveCount--;
 
-        foodTrays.MinusFreeze();
-
         if (!UIController.instance.uIInGame.IsActiveMove()) return;
 
         if (moveCount == -1)

@@ -6,7 +6,7 @@ public class IceTray : MonoBehaviour
 {
     public int amount;
 
-    TextMeshProUGUI textAmount;
+    public TextMeshProUGUI textAmount;
 
     FoodTray foodTray;
 
@@ -41,6 +41,8 @@ public class IceTray : MonoBehaviour
     {
         if (amount == 0) return;
 
+        amount = 0;
+
         foodTray.ActiveFoods(true);
 
         textAmount.text = "";
@@ -50,7 +52,7 @@ public class IceTray : MonoBehaviour
 
         smoke.Play();
 
-        DOVirtual.DelayedCall(2.5f, delegate
+        DOVirtual.DelayedCall(1.5f, delegate
         {
             gameObject.SetActive(false);
         });
@@ -61,15 +63,24 @@ public class IceTray : MonoBehaviour
         if (amount == 0) return;
 
         amount--;
+
         textAmount.text = amount.ToString();
 
         if (amount == 0)
         {
+            textAmount.text = "";
+
             foodTray.ActiveFoods(true);
 
-            gameObject.SetActive(false);
+            rb.isKinematic = false;
+            rb.AddForce(Vector3.up * 333, ForceMode.Impulse);
 
-            textAmount.text = "";
+            smoke.Play();
+
+            DOVirtual.DelayedCall(1.5f, delegate
+            {
+                gameObject.SetActive(false);
+            });
         }
     }
 }

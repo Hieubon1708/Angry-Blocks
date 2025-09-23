@@ -12,17 +12,27 @@ public class FoodQueue : MonoBehaviour
 
     List<Slot> slots = new List<Slot>();
 
-    public GameObject[] buttonAds;
+    public GameObject buttonAds;
+
+    public MeshRenderer line;
+
+    Color[] lineStartColors = new Color[2];
 
     private void Awake()
     {
         for (int i = 0; i < points.Count; i++)
         {
-            /*GameObject col = points[i].gameObject;
+            GameObject col = points[i].gameObject;
 
             col.SetActive(false);
 
-            slots.Add(new Slot(true, col));*/
+            slots.Add(new Slot(true, col));
+        }
+
+        for (int i = 0; i < line.materials.Length; i++)
+        {
+            lineStartColors[i] = line.materials[i].color;
+            line.materials[i].color = line.materials[i].color * 0.65f;
         }
     }
 
@@ -34,24 +44,15 @@ public class FoodQueue : MonoBehaviour
         UnityEvent eReward = new UnityEvent();
         eReward.AddListener(() =>
         {
-            if (adsPoints.Count == 0) return;
-
-            int count = 0;
-
-            if (adsPoints.Count > 4)
+            for (int i = 0; i < line.materials.Length; i++)
             {
-                buttonAds[0].SetActive(false);
-                buttonAds[1].SetActive(true);
-            }
-            else
-            {
-                buttonAds[1].SetActive(false);
+                line.materials[i].color = lineStartColors[i];
             }
 
-            while (count < 4)
-            {
-                if (count == 0) adsPoints[adsPoints.Count - 1].parent.parent.gameObject.SetActive(true);
+            buttonAds.SetActive(false);
 
+            while (adsPoints.Count > 0)
+            {
                 Transform p = adsPoints[adsPoints.Count - 1].transform;
 
                 points.Insert(8, p);
@@ -63,8 +64,6 @@ public class FoodQueue : MonoBehaviour
                 col.SetActive(false);
 
                 slots.Add(new Slot(true, col));
-
-                count++;
             }
         });
         ACEPlay.Bridge.BridgeController.instance.ShowRewarded("add_slot", eReward, null);
@@ -112,16 +111,16 @@ public class FoodQueue : MonoBehaviour
 
         AudioController.instance.PlaySoundNVibrate(null, 50);
 
-        GameController.FoodType type = slots[slotIndex].food.foodType;
-
         List<int> indexes = new List<int>();
 
-        for (int i = 0; i < slots.Count; i++)
+        int start = 0;
+
+        if (slotIndex >= 4) start = 4;
+        if (slotIndex >= 8) start = 8;
+
+        for (int i = start; i < start + 4; i++)
         {
-            if (slots[i].col.activeSelf && slots[i].food.foodType == type)
-            {
-                indexes.Add(i);
-            }
+            if (slots[i].col.activeSelf) indexes.Add(i);
         }
 
         for (int i = 0; i < indexes.Count; i++)
@@ -133,7 +132,7 @@ public class FoodQueue : MonoBehaviour
             FoodOnConveyorBelt.instance.SetParent(slots[indexes[index]].food);
 
             float mul = 1f / indexes.Count;
-            
+
             float time = index * 0.15f + Mathf.Clamp(mul, mul, 0.25f);
 
             slots[indexes[index]].food.transform.DOJump(pos, 15, 1, time).OnComplete(delegate
@@ -141,7 +140,6 @@ public class FoodQueue : MonoBehaviour
                 AudioController.instance.PlaySoundNVibrate(AudioController.instance.onDropConveyorBelt, 25);
 
                 FoodOnConveyorBelt.instance.AddFood(slots[indexes[index]].food);
-
             });
             slots[indexes[index]].RemoveFood();
         }

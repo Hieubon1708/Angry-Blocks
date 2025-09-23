@@ -23527,7 +23527,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e25e53d2079ce1e44bea25442a814ad4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  adUnitId: ca-app-pub-7053040887429247/9708643054
   isIconNative: 0
   nativeAds: {fileID: 701220650}
   rawMainImage: {fileID: 1914884313}
