@@ -24,12 +24,6 @@ public class Food : MonoBehaviour
         //ani.Play();
     }
 
-    public void Blur()
-    {
-        meshRenderer.material.color = new Color(0.5f, 0.5f, 0.5f);
-        meshRenderer.material.SetColor("_EmissionColor", new Color(0.75f, 0.75f, 0.75f));
-    }
-
     private void OnDestroy()
     {
         transform.DOKill();

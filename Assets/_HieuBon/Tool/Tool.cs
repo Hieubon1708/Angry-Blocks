@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -14,6 +16,10 @@ public class Tool : MonoBehaviour
 {
     public static Tool instance;
 
+    public bool isModify;
+
+    public TextAsset level;
+
     public GameObject preTray;
     public GameObject preShipper;
     public GameObject preCorner;
@@ -24,9 +30,14 @@ public class Tool : MonoBehaviour
 
     public GameObject submitQuestion;
 
+    public GameObject canvas;
+
+    public Transform trayContainer;
+
     Dictionary<GameObject, List<Transform>> snapPoints = new Dictionary<GameObject, List<Transform>>();
 
     public bool isGroup;
+    public bool isGroupTray;
 
     private void Awake()
     {
@@ -35,7 +46,14 @@ public class Tool : MonoBehaviour
         gridMask = LayerMask.GetMask("GridTool");
         objMask = LayerMask.GetMask("ObjTool");
         trashCanMask = LayerMask.GetMask("TrashCan");
+
+        if (isModify && level != null)
+        {
+            Import(JsonConvert.DeserializeObject<LevelData>(level.text));
+        }
     }
+
+    bool isShowUI;
 
     public Transform conveyorBeltContainer;
 
@@ -50,7 +68,7 @@ public class Tool : MonoBehaviour
     public GameObject listFood;
     public GameObject listFoodForShipper;
     GameObject foodSelected;
-    bool isTrayLanded;
+    bool isTrayLanded = true;
 
     Vector3 snapPoint;
 
@@ -105,6 +123,28 @@ public class Tool : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.G))
         {
             Group();
+        }
+
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            GroupTray();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            Canvas[] allCanvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+            for (int i = 0; i < allCanvases.Length; i++)
+            {
+                allCanvases[i].gameObject.SetActive(isShowUI);
+            }
+
+            isShowUI = !isShowUI;
+        }
+
+        if (Input.GetKeyDown(KeyCode.U))
+        {
+            canvas.SetActive(!canvas.activeSelf);
         }
 
         if (Input.GetKeyDown(KeyCode.S))
@@ -232,6 +272,11 @@ public class Tool : MonoBehaviour
                     }
                 }
 
+                if (objDraging.name.Contains("FoodTray") && isGroupTray)
+                {
+                    objDraging = trayContainer.gameObject;
+                }
+
                 if (!isUnuseGridPos)
                 {
                     float x = Mathf.Round(hit.point.x);
@@ -273,6 +318,11 @@ public class Tool : MonoBehaviour
 
         foodSelected.GetComponent<ShipperTool>().Rs();
     }
+    
+    public void ShipperRemoveLastFood()
+    {
+        foodSelected.GetComponent<ShipperTool>().RemoveLastFood();
+    }
 
     public void ShipperShowFood(GameObject e)
     {
@@ -298,8 +348,6 @@ public class Tool : MonoBehaviour
 
     public void ShipperFoodSelect(int type)
     {
-        listFoodForShipper.SetActive(false);
-
         foodSelected.GetComponent<ShipperTool>().AddFood(type);
     }
 
@@ -321,7 +369,7 @@ public class Tool : MonoBehaviour
     {
         listTrayLayer.SetActive(false);
 
-        objDraging = Instantiate(preTray, new Vector3(0, layer * 3, 0), Quaternion.identity, transform);
+        objDraging = Instantiate(preTray, new Vector3(0, layer * 3, 0), Quaternion.identity, trayContainer);
 
         objDraging.GetComponentInChildren<TextMeshProUGUI>().text = (layer + 1).ToString();
     }
@@ -353,7 +401,14 @@ public class Tool : MonoBehaviour
 
         for (int i = 0; i < trayDatas.Length; i++)
         {
-            trayDatas[i] = new TrayData(trayTools[i].transform.position, trayTools[i].transform.rotation, trayTools[i].foodTypes);
+            int amountFreeze = 0;
+
+            if (trayTools[i].amountFreeze.text != "")
+            {
+                amountFreeze = int.Parse(trayTools[i].amountFreeze.text);
+            }
+
+            trayDatas[i] = new TrayData(trayTools[i].transform.position, trayTools[i].transform.rotation, trayTools[i].foodTypes, amountFreeze);
         }
 
         ShipperTool[] shipperTools = GetComponentsInChildren<ShipperTool>();
@@ -362,7 +417,7 @@ public class Tool : MonoBehaviour
 
         for (int i = 0; i < shipperDatas.Length; i++)
         {
-            shipperDatas[i] = new ShipperData(shipperTools[i].transform.position, shipperTools[i].transform.rotation,
+            shipperDatas[i] = new ShipperData(shipperTools[i].pivot.position, shipperTools[i].transform.position, shipperTools[i].transform.rotation,
                 shipperTools[i].foodTypes.ToArray(), shipperTools[i].GetOutPoints(), shipperTools[i].GetInPoints());
         }
 
@@ -409,17 +464,19 @@ public class Tool : MonoBehaviour
 
         BarData barData = new BarData(bar.transform.position, bar.transform.rotation);
 
-        levelData = new LevelData(shipperDatas, trayDatas, conveyorBeltDatas, barData);
+        levelData = new LevelData(shipperDatas, trayDatas, conveyorBeltDatas, barData);  
 
         levelData.moveAmount = int.Parse(moveAmount.text);
 
         string jsonData = JsonUtility.ToJson(levelData);
 
-        string filePath = Path.Combine(Application.persistentDataPath, levelName.text + ".json");
+        string filePath = Path.Combine(Application.dataPath + "/_HieuBon/Resources/", levelName.text + ".json");
 
         File.WriteAllText(filePath, jsonData);
 
         Debug.Log("Đã lưu dữ liệu vào: " + filePath);
+
+        AssetDatabase.Refresh();
     }
 
     public LevelData levelData;
@@ -520,5 +577,74 @@ public class Tool : MonoBehaviour
                 isTrayLanded = true;
             }
         }
+    }
+
+    public void GroupTray()
+    {
+        isGroupTray = !isGroupTray;
+
+        if (!isGroupTray)
+        {
+            if (objDraging != null)
+            {
+                objDraging.transform.position = gridPos;
+
+                objDraging = null;
+
+                isTrayLanded = true;
+            }
+        }
+    }
+
+    public void Import(LevelData levelData)
+    {
+        ShipperData[] shipperDatas = levelData.shipperDatas;
+        TrayData[] trayDatas = levelData.trayDatas;
+        ConveyorBeltData[] conveyorBeltDatas = levelData.conveyorBeltDatas;
+        BarData barData = levelData.barData;
+        int moveAmount = levelData.moveAmount;
+
+        for (int i = 0; i < shipperDatas.Length; i++)
+        {
+            GameObject e = Instantiate(preShipper, transform);
+
+            e.GetComponent<ShipperTool>().Import(shipperDatas[i]);
+        }
+        for (int i = 0; i < trayDatas.Length; i++)
+        {
+            Vector3 pos = trayDatas[i].position;
+
+            GameObject e = Instantiate(preTray, pos, trayDatas[i].direction, trayContainer);
+
+            e.GetComponentInChildren<TextMeshProUGUI>().text = (pos.y / 3).ToString();
+            e.GetComponent<TrayTool>().Import(trayDatas[i]);
+        }
+        for (int i = 0; i < conveyorBeltDatas.Length; i++)
+        {
+            GameObject e = null;
+
+            if (conveyorBeltDatas[i].type == ConveyorBeltType.Corner) e = Instantiate(preCorner, conveyorBeltDatas[i].position, conveyorBeltDatas[i].direction, conveyorBeltContainer);
+            if (conveyorBeltDatas[i].type == ConveyorBeltType.Straight) e = Instantiate(preStraight, conveyorBeltDatas[i].position, conveyorBeltDatas[i].direction, conveyorBeltContainer);
+            if (conveyorBeltDatas[i].type == ConveyorBeltType.Inout) e = Instantiate(preInOut, conveyorBeltDatas[i].position, conveyorBeltDatas[i].direction, conveyorBeltContainer);
+
+            e.GetComponent<ConveyorBeltTool>().txt.text = i.ToString();
+
+            List<Transform> v = new List<Transform>();
+
+            for (int j = 0; j < e.transform.childCount; j++)
+            {
+                if (e.transform.GetChild(j).name.Contains("Snap"))
+                {
+                    v.Add(e.transform.GetChild(j));
+                }
+            }
+
+            snapPoints.Add(e, v);
+        }
+
+        bar.transform.position = barData.position;
+        bar.transform.rotation = barData.direction;
+
+        this.moveAmount.text = moveAmount.ToString();
     }
 }

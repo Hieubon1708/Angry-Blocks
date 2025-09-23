@@ -15,13 +15,13 @@ public class FoodPoint : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (currentSegmentIndex == -1) return;
+        if (currentSegmentIndex == -1 || currentSegmentIndex >= LevelController.instance.conveyorBelt.cachedPathPoints.Count) return;
 
         Vector3 targetPoint = LevelController.instance.conveyorBelt.cachedPathPoints[currentSegmentIndex];
 
-        transform.position = Vector3.MoveTowards(transform.position, targetPoint, LevelController.instance.conveyorBelt.speed);
+        transform.position = Vector3.MoveTowards(transform.position, targetPoint, GameController.instance.Speed);
 
-        if (Vector3.Distance(transform.position, targetPoint) < 0.01f)
+        if (Vector3.Distance(transform.position, targetPoint) < 0.1f)
         {
             currentSegmentIndex++;
 

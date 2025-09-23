@@ -15,6 +15,11 @@ public class DeliveryManAnimator : MonoBehaviour
         motobike.SetBool("Wheelie", isEnable);
     }
 
+    public void Bounce()
+    {
+        motobike.SetTrigger("Bounce");
+    }
+
     public void OpenBox()
     {
         boxAnimation.Play("Shipper_Open_Box");

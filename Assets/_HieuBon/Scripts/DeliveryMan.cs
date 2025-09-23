@@ -1,13 +1,18 @@
 using DG.Tweening;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Net;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DeliveryMan : MonoBehaviour
 {
     public GameController.FoodType foodType;
 
-    DeliveryLine deliveryLine;
+    [HideInInspector]
+    public DeliveryLine deliveryLine;
 
     Collider[] colliders;
 
@@ -19,7 +24,8 @@ public class DeliveryMan : MonoBehaviour
 
     public Transform foodContainer;
 
-    int indexPoint;
+    [HideInInspector]
+    public int indexPoint;
 
     [HideInInspector]
     public DeliveryManAnimator deliveryManAnimator;
@@ -29,7 +35,15 @@ public class DeliveryMan : MonoBehaviour
     public MeshRenderer meshBoxBody;
     public MeshRenderer meshBoxUpper;
 
-    bool isMovedIn;
+    [HideInInspector]
+    public bool isMovedIn;
+
+    public Vector3 pivot;
+
+    public Image foodIcon;
+
+    public ParticleSystem smoke;
+    public ParticleSystem star;
 
     private void Awake()
     {
@@ -44,19 +58,27 @@ public class DeliveryMan : MonoBehaviour
         mask = LayerMask.GetMask("Food");
     }
 
-    public void SetFoodType(GameController.FoodType foodType)
+    public void SetFoodTypeAndPivot(GameController.FoodType foodType, Vector3 pivot)
     {
         this.foodType = foodType;
+        this.pivot = pivot;
 
-        meshBoxBody.material.color = GameController.instance.GetBoxBodyColor(foodType);
-        meshBoxUpper.material.color = GameController.instance.GetBoxUpperColor(foodType);
+        foodIcon.sprite = GameController.instance.GetFoodIcon(foodType);
+
+        //meshBoxBody.material.color = GameController.instance.GetBoxBodyColor(foodType);
+        //meshBoxUpper.material.color = GameController.instance.GetBoxUpperColor(foodType);
     }
 
     private void Update()
     {
+        FoodIconRotate();
+
         if (!isMovedIn) return;
 
-        int count = Physics.OverlapSphereNonAlloc(transform.position, distance, colliders, mask);
+        if (LevelController.instance.gameState == LevelController.GameState.Win
+         || LevelController.instance.gameState == LevelController.GameState.Lose) return;
+
+        int count = Physics.OverlapSphereNonAlloc(pivot, distance, colliders, mask);
 
         if (count > 0 && indexPoint < points.Length)
         {
@@ -70,19 +92,27 @@ public class DeliveryMan : MonoBehaviour
 
                     int j = indexPoint;
 
+                    Vector3 eulers = food.transform.eulerAngles;
+                    eulers.y += 1080;
+
+                    food.transform.DORotate(eulers, 0.5f, RotateMode.FastBeyond360);
                     food.transform.DOJump(points[indexPoint].position, 10, 1, 0.5f).OnComplete(delegate
                     {
+                        AudioController.instance.PlaySoundNVibrate(AudioController.instance.onDropShippersBox, 25);
+
                         if (j == points.Length - 1)
                         {
+                            star.Play();
+
                             deliveryManAnimator.CloseBox();
 
-                            DOVirtual.DelayedCall(0.15f, delegate
+                            DOVirtual.DelayedCall(0.25f, delegate
                             {
                                 StartCoroutine(MoveOut(deliveryLine.endPoints));
                             });
                         }
                     });
-                    food.transform.DOScale(2f, 0.25f);
+                    food.transform.DOScale(3f, 0.25f);
                     food.transform.SetParent(foodContainer);
 
                     indexPoint++;
@@ -93,24 +123,91 @@ public class DeliveryMan : MonoBehaviour
         }
     }
 
-    public IEnumerator MoveIn(Vector3[] startPoints)
+    public void Magnet(List<FoodTray> f)
+    {
+        if (isMovedIn && indexPoint < points.Length)
+        {
+            FoodTray foodTray = null;
+
+            for (int i = 0; i < f.Count; i++)
+            {
+                if (f[i].IsContainFood(foodType))
+                {
+                    foodTray = f[i];
+
+                    break;
+                }
+            }
+
+            if (foodTray != null)
+            {
+                f.Remove(foodTray);
+                foodTray.Toss(this);
+            }
+        }
+    }
+
+    public IEnumerator Waiting(Vector3[] startPoints)
+    {
+        foodContainer.gameObject.SetActive(true);
+        deliveryManAnimator.Wheelie(true);
+
+        while (Vector3.Distance(transform.position, startPoints[1]) >= 0.01f)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, startPoints[1], Time.deltaTime * speed);
+
+            yield return new WaitForEndOfFrame();
+        }
+
+        Vector3 target = startPoints.Length == 1 ? deliveryLine.transform.position : startPoints[1];
+        Vector3 dir = target - transform.position;
+
+        float angle = Vector3.Angle(transform.forward, dir);
+
+        while (angle > 3 && Vector3.Distance(transform.position, target) >= 0.01f)
+        {
+            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * speed);
+
+            angle = Vector3.Angle(transform.forward, dir);
+
+            yield return new WaitForEndOfFrame();
+        }
+
+        deliveryManAnimator.Wheelie(false);
+    }
+
+    void FoodIconRotate()
+    {
+        foodIcon.transform.localRotation = Quaternion.Euler(90, -transform.eulerAngles.y, 0);
+    }
+
+    public IEnumerator MoveIn(bool isStart, Vector3[] startPoints, DeliveryMan behind)
     {
         if (startPoints.Length == 0) yield break;
 
-        gameObject.SetActive(true);
+        foodContainer.gameObject.SetActive(true);
 
         deliveryManAnimator.Wheelie(true);
 
-        int index = 1;
+        int index = isStart ? 0 : 1;
 
-        transform.position = startPoints[0];
+        float angle;
 
         while (index < startPoints.Length + 1)
         {
             Vector3 target = index < startPoints.Length ? startPoints[index] : deliveryLine.transform.position;
             Vector3 dir = target - transform.position;
 
-            transform.rotation = Quaternion.LookRotation(dir);
+            angle = Vector3.Angle(transform.forward, dir);
+
+            while (angle > 3 && Vector3.Distance(transform.position, target) >= 0.01f)
+            {
+                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * speed);
+
+                angle = Vector3.Angle(transform.forward, dir);
+
+                yield return new WaitForEndOfFrame();
+            }
 
             while (Vector3.Distance(transform.position, target) >= 0.01f)
             {
@@ -119,9 +216,24 @@ public class DeliveryMan : MonoBehaviour
                 yield return new WaitForEndOfFrame();
             }
 
+            if (index == 1 && behind != null) StartCoroutine(behind.Waiting(startPoints));
             index++;
         }
+
+        angle = Vector3.Angle(transform.forward, deliveryLine.transform.forward);
+
+        while (angle > 3)
+        {
+            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(deliveryLine.transform.forward), Time.deltaTime * speed);
+
+            angle = Vector3.Angle(transform.forward, deliveryLine.transform.forward);
+
+            yield return new WaitForEndOfFrame();
+        }
+
         deliveryManAnimator.Wheelie(false);
+
+        AudioController.instance.PlaySoundNVibrate(AudioController.instance.shipperArrives);
 
         yield return new WaitForSeconds(0.1f);
 
@@ -131,6 +243,10 @@ public class DeliveryMan : MonoBehaviour
     public IEnumerator MoveOut(Vector3[] endPoints)
     {
         if (endPoints.Length == 0) yield break;
+
+        smoke.Play();
+
+        AudioController.instance.PlaySoundNVibrate(AudioController.instance.shipperGo);
 
         deliveryLine.NextDeliveryMan();
 
@@ -143,7 +259,16 @@ public class DeliveryMan : MonoBehaviour
             Vector3 target = index < endPoints.Length ? endPoints[index] : deliveryLine.transform.position;
             Vector3 dir = target - transform.position;
 
-            transform.rotation = Quaternion.LookRotation(dir);
+            float angle = Vector3.Angle(transform.forward, dir);
+
+            while (angle > 3)
+            {
+                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * speed);
+
+                angle = Vector3.Angle(transform.forward, dir);
+
+                yield return new WaitForEndOfFrame();
+            }
 
             while (Vector3.Distance(transform.position, target) >= 0.01f)
             {
@@ -155,10 +280,14 @@ public class DeliveryMan : MonoBehaviour
             index--;
         }
 
-        gameObject.SetActive(false);
+        foodContainer.gameObject.SetActive(false);
+
+        smoke.Stop();
 
         deliveryLine.indexManDelivered++;
 
         LevelController.instance.deliveryController.IsWin();
+
+        isMovedIn = false;
     }
 }

@@ -23,7 +23,7 @@ public class DeliveryLine : MonoBehaviour
     [HideInInspector]
     public int indexManDelivered;
 
-    public void GenerateDeliveryMan(int[] foodTypes, Vector3[] startPoints, Vector3[] endPoints)
+    public void GenerateDeliveryMan(int[] foodTypes, Vector3[] startPoints, Vector3[] endPoints, Vector3 pivot)
     {
         this.startPoints = startPoints;
         this.endPoints = endPoints;
@@ -32,23 +32,27 @@ public class DeliveryLine : MonoBehaviour
         {
             GameObject e = Instantiate(preDeliveryMan, transform);
 
+            e.transform.position = startPoints[0];
+            e.transform.rotation = Quaternion.LookRotation(startPoints[1] - startPoints[0]);
+
             DeliveryMan deliveryMan = e.GetComponent<DeliveryMan>();
 
-            deliveryMan.SetFoodType(GameController.instance.GetFoodTypeByIndex(foodTypes[i]));
+            deliveryMan.SetFoodTypeAndPivot(GameController.instance.GetFoodTypeByIndex(foodTypes[i]), pivot);
 
             deliveryMen.Add(deliveryMan);
 
-            e.SetActive(false);
+            deliveryMan.foodContainer.gameObject.SetActive(false);
         }
 
-        NextDeliveryMan();
+        NextDeliveryMan(true);
     }
 
-    public void NextDeliveryMan()
+    public void NextDeliveryMan(bool isStart = false)
     {
         if (indexMan == deliveryMen.Count) return;
 
-        StartCoroutine(deliveryMen[indexMan].MoveIn(startPoints));
+        StartCoroutine(deliveryMen[indexMan].MoveIn(isStart, startPoints, indexMan < deliveryMen.Count - 1 ? deliveryMen[indexMan + 1] : null));
+
         indexMan++;
     }
 

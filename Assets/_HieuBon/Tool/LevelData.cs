@@ -26,6 +26,7 @@ public class LevelData
 [System.Serializable]
 public class ShipperData
 {
+    public Vector3 pivot;
     public Vector3 position;
     public Quaternion direction;
     public int[] foodType;
@@ -33,8 +34,9 @@ public class ShipperData
     public Vector3[] endPoints;
     public Vector3[] startPoints;
 
-    public ShipperData(Vector3 position, Quaternion direction, int[] foodType, Vector3[] endPoints, Vector3[] startPoints)
+    public ShipperData(Vector3 pivot, Vector3 position, Quaternion direction, int[] foodType, Vector3[] endPoints, Vector3[] startPoints)
     {
+        this.pivot = pivot;
         this.position = position;
         this.direction = direction;
         this.foodType = foodType;
@@ -49,12 +51,14 @@ public class TrayData
     public Vector3 position;
     public Quaternion direction;
     public int[] foodType = new int[4];
+    public int amountFreeze;
 
-    public TrayData(Vector3 position, Quaternion direction, int[] foodType)
+    public TrayData(Vector3 position, Quaternion direction, int[] foodType, int amountFreeze)
     {
         this.position = position;
         this.direction = direction;
         this.foodType = foodType;
+        this.amountFreeze = amountFreeze;
     }
 }
 

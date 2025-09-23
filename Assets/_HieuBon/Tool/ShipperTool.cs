@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using static GameController;
@@ -22,8 +24,50 @@ public class ShipperTool : MonoBehaviour
     public List<Transform> inn = new List<Transform>();
     public List<Transform> outt = new List<Transform>();
 
+    public GameObject prePivot;
     public GameObject preIn;
     public GameObject preOut;
+
+    public GameObject buttonPivot;
+
+    public Transform pivot;
+
+    public void Import(ShipperData shipperData)
+    {
+        transform.position = shipperData.position;
+        transform.rotation = shipperData.direction;
+
+        for (int i = 0; i < shipperData.foodType.Length; i++)
+        {
+            int index = shipperData.foodType[i];
+
+            foodTypes.Add(index);
+
+            GameObject e = Instantiate(pre, grid);
+
+            e.GetComponent<Image>().sprite = sprites[index];
+
+            imgs.Add(e);
+        }
+
+        for (int i = 0; i < shipperData.endPoints.Length; i++)
+        {
+            GameObject e = Instantiate(preOut, shipperData.endPoints[i], Quaternion.identity, transform);
+            outt.Add(e.transform);
+        }
+
+        for (int i = 0; i < shipperData.startPoints.Length; i++)
+        {
+            GameObject e = Instantiate(preIn, shipperData.startPoints[i], Quaternion.identity, transform);
+            inn.Add(e.transform);
+        }
+
+        if (shipperData.pivot != Vector3.zero)
+        {
+            buttonPivot.SetActive(false);
+            pivot = Instantiate(prePivot, shipperData.pivot, Quaternion.identity, transform).transform;
+        }
+    }
 
     private void Update()
     {
@@ -38,6 +82,20 @@ public class ShipperTool : MonoBehaviour
         foreach (var e in imgs)
         {
             Destroy(e);
+        }
+
+        foodTypes.Clear();
+        imgs.Clear();
+    }
+
+    public void RemoveLastFood()
+    {
+        if (foodTypes.Count > 0)
+        {
+            int index = foodTypes.Count - 1;
+            foodTypes.RemoveAt(index);
+            Destroy(imgs[index].gameObject);
+            imgs.RemoveAt(index);
         }
     }
 
@@ -59,24 +117,24 @@ public class ShipperTool : MonoBehaviour
 
     public void AddIn()
     {
-        GameObject e = Instantiate(preIn, new Vector3(-16f, 0f, -28f), Quaternion.identity, transform);
+        GameObject e = Instantiate(preIn, new Vector3(-23f, 0f, -17f), Quaternion.identity, transform);
         inn.Add(e.transform);
+    }
+
+    public void AddPivot()
+    {
+        buttonPivot.SetActive(false);
+        pivot = Instantiate(prePivot, new Vector3(-23f, 3.5f, -17f), Quaternion.identity, transform).transform;
     }
 
     public void AddOut()
     {
-        GameObject e = Instantiate(preOut, new Vector3(16f, 0f, -28f), Quaternion.identity, transform);
+        GameObject e = Instantiate(preOut, new Vector3(23f, 0f, -17f), Quaternion.identity, transform);
         outt.Add(e.transform);
     }
 
     public Vector3[] GetInPoints()
     {
-        Vector3 nextPoint = inn.Count == 1 ? transform.position : inn[1].position;
-
-        Vector3 dir = inn[0].position - nextPoint;
-
-        inn[0].position += dir.normalized * 10;
-
         Vector3[] results = new Vector3[inn.Count];
 
         for (int i = 0; i < results.Length; i++)
@@ -89,12 +147,6 @@ public class ShipperTool : MonoBehaviour
 
     public Vector3[] GetOutPoints()
     {
-        Vector3 nextPoint = outt.Count == 1 ? transform.position : outt[1].position;
-
-        Vector3 dir = outt[0].position - nextPoint;
-
-        outt[0].position += dir.normalized * 10;
-
         Vector3[] results = new Vector3[outt.Count];
 
         for (int i = 0; i < results.Length; i++)

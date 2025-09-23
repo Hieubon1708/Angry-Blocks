@@ -14,10 +14,7 @@ public class ConveyorBelt : MonoBehaviour
     public GameObject preStraight;
     public GameObject preInOut;
 
-    int segmentsPerCurve = 10;
-
-    [Range(0.01f, 0.1f)]
-    public float speed;
+    int segmentsPerCurve = 2;
 
     public Transform bar;
 
@@ -254,7 +251,7 @@ public class ConveyorBelt : MonoBehaviour
             }
         }
 
-        //cachedPathPoints.Add(controlPoints[controlPoints.Count - 2]);
+        cachedPathPoints.Add(controlPoints[controlPoints.Count - 2]);
     }
 
     Vector3 GetCatmullRomPoint(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)

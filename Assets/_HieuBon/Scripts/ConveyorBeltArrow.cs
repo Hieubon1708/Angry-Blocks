@@ -2,8 +2,7 @@ using UnityEngine;
 
 public class ConveyorBeltArrow : MonoBehaviour
 {
-    [HideInInspector]
-    public int currentSegmentIndex = -1;
+    int currentSegmentIndex = -1;
 
     public void SetSegmentIndex(int currentSegmentIndex)
     {
@@ -12,15 +11,15 @@ public class ConveyorBeltArrow : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (currentSegmentIndex == -1) return;
+        if (currentSegmentIndex == -1 || currentSegmentIndex >= LevelController.instance.conveyorBelt.cachedPathPoints.Count) return;
 
         Vector3 targetPoint = LevelController.instance.conveyorBelt.cachedPathPoints[currentSegmentIndex];
         Vector3 dir = targetPoint - transform.position;
 
-        transform.position = Vector3.MoveTowards(transform.position, targetPoint, LevelController.instance.conveyorBelt.speed);
-        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir) * Quaternion.Euler(-90, -90, 0), LevelController.instance.conveyorBelt.speed * 10);
+        transform.position = Vector3.MoveTowards(transform.position, targetPoint, GameController.instance.Speed);
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir) * Quaternion.Euler(-90, -90, 0), GameController.instance.Speed);
 
-        if (Vector3.Distance(transform.position, targetPoint) < 0.01f)
+        if (Vector3.Distance(transform.position, targetPoint) < 0.1f)
         {
             currentSegmentIndex++;
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System;
 using UnityEngine;
+using DG.Tweening;
 
 public class GameController : MonoBehaviour
 {
@@ -15,21 +16,33 @@ public class GameController : MonoBehaviour
     public string[] shipperBoxBodyHex;
     public string[] shipperBoxUpperHex;
 
-    public int Level
+    public float conveyorBeltSpeed;
+
+    public Sprite[] foodsIcon;
+
+    public Animation hammerAni;
+
+    public float Speed
     {
         get
         {
-            return PlayerPrefs.GetInt("Level", 1);
-        }
-        set
-        {
-            PlayerPrefs.SetInt("Level", value);
+            return conveyorBeltSpeed;
         }
     }
 
     private void Awake()
     {
         instance = this;
+
+        float defaultSize = cameraMain.orthographicSize;
+        float screenRatio = (float)Screen.width / (float)Screen.height;
+        float targetRatio = 10.8f / 19.2f;
+
+        if (screenRatio < targetRatio)
+        {
+            float changeSize = targetRatio / screenRatio;
+            cameraMain.orthographicSize = defaultSize * changeSize;
+        }
     }
 
     private void Start()
@@ -66,6 +79,11 @@ public class GameController : MonoBehaviour
         return FoodType.None;
     }
 
+    public Sprite GetFoodIcon(FoodType foodType)
+    {
+        return foodsIcon[(int)foodType];
+    }
+
     public Color GetBoxBodyColor(FoodType foodType)
     {
         Color color = Color.white;
@@ -82,6 +100,16 @@ public class GameController : MonoBehaviour
         ColorUtility.TryParseHtmlString("#" + shipperBoxUpperHex[(int)foodType], out color);
 
         return color;
+    }
+
+    public void ShakeCamera()
+    {
+        cameraMain.transform.DOShakePosition(0.75f, 1, 25);
+    }
+
+    public void PlayHammer()
+    {
+        hammerAni.Play();
     }
 }
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class PlayerController : MonoBehaviour
 {
@@ -17,23 +18,28 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         if (LevelController.instance.gameState == LevelController.GameState.Win
-         || LevelController.instance.gameState == LevelController.GameState.Lose) return;
+         || LevelController.instance.gameState == LevelController.GameState.Lose
+         || LevelController.instance.gameState == LevelController.GameState.Pause) return;
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
         {
             isDrag = true;
         }
 
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
         {
             isDrag = false;
 
             if (hitObj != null && foodTray != null)
             {
-                if (foodTray.IsHighestLayer())
+                if (foodTray.IsHighestLayer() && !foodTray.IsFreeze())
                 {
                     LevelController.instance.MinusMove();
                     foodTray.Toss();
+
+                    AudioController.instance.PlaySoundNVibrate(AudioController.instance.onClickTray, 50);
+
+                    UIController.instance.uITutorial.HideTut();
                 }
             }
 
@@ -71,7 +77,7 @@ public class PlayerController : MonoBehaviour
 
                     if (foodTray != null)
                     {
-                        if (foodTray.IsHighestLayer())
+                        if (foodTray.IsHighestLayer() && !foodTray.IsFreeze())
                         {
                             foodTray.Holding();
                         }
